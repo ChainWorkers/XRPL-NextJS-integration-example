@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import Home from ".";
+import Home from "./index";
 import "@/styles/globals.css";
 import { XRPLProvider } from "@/contexts/XRPLContext";
 

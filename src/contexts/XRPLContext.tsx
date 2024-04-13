@@ -3,6 +3,7 @@ import { Client, Wallet } from "xrpl";
 
 interface xrplContextType {
     xrplWallet: Wallet | undefined;
+    getWalletFromSeed: (seed: string | undefined) => Wallet | undefined;
 }
 
 const XRPLContext = createContext<xrplContextType | undefined>(undefined);
@@ -73,7 +74,7 @@ export const XRPLProvider = ({ children }: any): React.JSX.Element => {
     }, []);
 
     return (
-        <XRPLContext.Provider value={{ xrplWallet }} >
+        <XRPLContext.Provider value={{ xrplWallet, getWalletFromSeed }} >
             {children}
         </XRPLContext.Provider>
     )

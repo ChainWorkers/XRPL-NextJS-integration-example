@@ -4,6 +4,7 @@ import { Client, Wallet } from "xrpl";
 interface xrplContextType {
     xrplWallet: Wallet | undefined;
     getWalletFromSeed: (seed: string | undefined) => Wallet | undefined;
+    getWalletFromFaucet: () => Promise<Wallet | undefined>;
 }
 
 const XRPLContext = createContext<xrplContextType | undefined>(undefined);
@@ -20,7 +21,7 @@ export const XRPLProvider = ({ children }: any): React.JSX.Element => {
 
     const initializeXRPLClient = async () => {
         console.log("create new xrpl client");
-        const client = new Client('wss://s.altnet.rippletest.net:51233'); // wss://s.altnet.rippletest.net:51233 is the actual testnet address
+        const client = new Client('wss://s.altnet.rippletest.net:51233'); // wss://s.altnet.rippletest.net:51233 is the current testnet address
         console.log("set the new client inside the xrplClient variable");
         client && setXrplClient(client);
     }
@@ -46,14 +47,21 @@ export const XRPLProvider = ({ children }: any): React.JSX.Element => {
     const getWalletFromSeed = (seed: string | undefined) => {
         if (!seed || seed.length !== 31) return (undefined);
         const wallet = Wallet.fromSeed(seed);
-        return (wallet ? wallet : undefined);
+        wallet && setXrplWallet(wallet);
+        return (wallet);
     };
 
-    useEffect(() => {
-        const userWallet = getWalletFromSeed("sEdSWEiy4QFA18qf9V3vQV1bvJUbjTB");
-        setXrplWallet(userWallet);
-        console.log("got userWallet:", userWallet);
-    }, [xrplClient]); // copy and paste this useEffect when you want to connect an user inside a login page.
+    const getWalletFromFaucet = async () => {
+        if (xrplClient && xrplClient !== null) {
+            try {
+                const foundedWallet = await xrplClient.fundWallet(null, { faucetHost: undefined });
+                foundedWallet && foundedWallet.wallet && setXrplWallet(foundedWallet.wallet);
+                return (foundedWallet ? foundedWallet.wallet : undefined);
+            } catch (error) {
+                console.log("error from generate wallet:", error);
+            }
+        }
+    };
 
     useEffect(() => {
         xrplClient === undefined && initializeXRPLClient();
@@ -74,7 +82,7 @@ export const XRPLProvider = ({ children }: any): React.JSX.Element => {
     }, []);
 
     return (
-        <XRPLContext.Provider value={{ xrplWallet, getWalletFromSeed }} >
+        <XRPLContext.Provider value={{ xrplWallet, getWalletFromSeed, getWalletFromFaucet }} >
             {children}
         </XRPLContext.Provider>
     )
